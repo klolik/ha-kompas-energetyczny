@@ -6,7 +6,6 @@ from homeassistant.const import Platform
 
 from .const import DOMAIN
 
-PLATFORMS = [Platform.SENSOR]
 
 async def async_setup(hass: HomeAssistant, config: dict):
     if DOMAIN not in hass.data:
@@ -14,10 +13,14 @@ async def async_setup(hass: HomeAssistant, config: dict):
     return True
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    hass.async_create_task(
+        hass.config_entries.async_forward_entry_setup(entry, Platform.SENSOR)
+    )
     return True
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    hass.async_create_task(
+        hass.config_entries.async_forward_entry_unload(entry, Platform.SENSOR)
+    )
 
-    return unload_ok
+    return True
