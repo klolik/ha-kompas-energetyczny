@@ -6,5 +6,6 @@
     "codeowners": ["@klolik"],
     "requirements": [],
     "version": "1.0.0",
-    "iot_class": "cloud_polling"
+    "iot_class": "cloud_polling",
+    "config_flow": true
 }
