@@ -3,4 +3,5 @@
 
 # Kompas Energetyczny
 
-TBD
+This is (early stage of) work in progress, I would be surprised if it does anything useful.
+
