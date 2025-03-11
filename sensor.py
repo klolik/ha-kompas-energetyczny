@@ -16,9 +16,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await coordinator.async_config_entry_first_refresh()
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
     sensors = [
-        {"key": "recommendation", "name": "Recommendation", "device_class": None},
-        {"key": "renewable_percentage", "name": "Renewable Percentage", "device_class": "percentage", "unit": "%"},
-        {"key": "timestamp", "name": "Timestamp", "device_class": "timestamp"},
+        {"key": "wodne", "name": "wodne", "device_class": None},
+        {"key": "wiatrowe", "name": "wiatrowe", "device_class": None},
+        {"key": "PV", "name": "PV", "device_class": None},
+        {"key": "generacja", "name": "generacja", "device_class": None},
+        {"key": "zapotrzebowanie", "name": "zapotrzebowanie", "device_class": None},
+        {"key": "cieplne", "name": "cieplne", "device_class": None},
+#        {"key": "timestamp", "name": "Timestamp", "device_class": "timestamp"},
     ]
     for sensor_config in sensors:
         hass.config_entries.async_setup_platform(
@@ -61,10 +65,10 @@ class KompasEnergetycznySensor(SensorEntity):
 
     @property
     def native_value(self):
-        if self._sensor_key in self._coordinator.data:
+        if self._sensor_key in self._coordinator.data.get("podsumowanie", {}):
             value = self._coordinator.data[self._sensor_key]
-            if self._sensor_key == "timestamp":
-                return dt_util.parse_datetime(value)
+#            if self._sensor_key == "timestamp":
+#                return dt_util.parse_datetime(value)
             return value
         return None
 
