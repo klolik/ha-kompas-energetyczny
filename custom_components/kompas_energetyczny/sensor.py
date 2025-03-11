@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -35,7 +35,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 class KompasEnergetycznyDataUpdateCoordinator(DataUpdateCoordinator):
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
-        super().__init__(hass, _LOGGER, name=entry.title)
+        super().__init__(
+            hass,
+            _LOGGER,
+            name=entry.title,
+            update_interval=timedelta(seconds=300)
+        )
         self.entry = entry
         self.url = entry.data.get("url")
         self.data = None
