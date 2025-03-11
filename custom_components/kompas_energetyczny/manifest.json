@@ -5,7 +5,7 @@
     "dependencies": [],
     "codeowners": ["@klolik"],
     "requirements": [],
-    "version": "1.0.0",
+    "version": "0.0.1",
     "iot_class": "cloud_polling",
     "config_flow": true
 }
