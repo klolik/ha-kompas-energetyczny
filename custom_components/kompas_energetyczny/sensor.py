@@ -120,3 +120,4 @@ class KompasEnergetycznySensor(SensorEntity):
 #TODO#class KompasEnergetycznyPowerSensor(SensorEntity): # technology power [MW]
 #TODO#class KompasEnergetycznyPowerShareSensor(SensorEntity): # % of total production per technology [%]
 #TODO#class KompasEnergetycznyRenewablePowerShare(SensorEntity): # % of renewables
+#TODO#class KompasEnergetycznyPowerImport(SensorEntity): # zapotrzebowanie-produkcja
