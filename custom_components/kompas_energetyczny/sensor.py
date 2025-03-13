@@ -33,7 +33,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
         {"key": "PV", "name": "Sun", "device_class": SensorDeviceClass.POWER, "unit": UnitOfPower.MEGA_WATT},
         {"key": "generacja", "name": "Production", "device_class": SensorDeviceClass.POWER, "unit": UnitOfPower.MEGA_WATT},
         {"key": "zapotrzebowanie", "name": "Demand", "device_class": SensorDeviceClass.POWER, "unit": UnitOfPower.MEGA_WATT},
-        {"key": "cieplne", "name": "cieplne", "device_class": SensorDeviceClass.POWER, "unit": UnitOfPower.MEGA_WATT},
+        {"key": "cieplne", "name": "Fossil", "device_class": SensorDeviceClass.POWER, "unit": UnitOfPower.MEGA_WATT},
         {"key": "power_demand_coverage", "name": "Power Demand Coverage", "unit": PERCENTAGE},
         {"key": "power_renewable", "name": "Renewable Share", "unit": PERCENTAGE},
 #        {"key": "timestamp", "name": "Timestamp", "device_class": "timestamp"},
