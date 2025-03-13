@@ -10,7 +10,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 import requests
-from .const import DOMAIN, MANUFACTURER, DEFAULT_NAME, HOME_URL
+from .const import DOMAIN, MANUFACTURER, DEFAULT_NAME, HOME_URL, ROUNDING
 
 # https://developers.home-assistant.io/docs/core/entity/sensor/#available-state-classes
 
@@ -100,12 +100,12 @@ class KompasEnergetycznySensor(SensorEntity):
 #                return dt_util.parse_datetime(value)
             return value
         if self._sensor_key == "power_demand_coverage":
-            return round(podsumowanie["generacja"] / podsumowanie["zapotrzebowanie"] * 100, 2)
+            return round(podsumowanie["generacja"] / podsumowanie["zapotrzebowanie"] * 100, ROUNDING)
         if self._sensor_key == "power_renewable":
             # assume `inne` is renewable
             generacja = podsumowanie["generacja"]
             cieplne = podsumowanie["cieplne"]
-            return round((generacja - cieplne) / generacja * 100, 2)
+            return round((generacja - cieplne) / generacja * 100, ROUNDING)
         return None
 
     async def async_added_to_hass(self) -> None:
