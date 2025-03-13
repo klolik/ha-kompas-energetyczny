@@ -5,11 +5,12 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfPower
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 import requests
-from .const import DOMAIN, DEFAULT_NAME
+from .const import DOMAIN, MANUFACTURER, DEFAULT_NAME, HOME_URL
 
 # https://developers.home-assistant.io/docs/core/entity/sensor/#available-state-classes
 
@@ -75,6 +76,14 @@ class KompasEnergetycznySensor(SensorEntity):
         self._attr_unique_id = f"{self._coordinator.entry.entry_id}_{self._sensor_key}"
         self._attr_device_class = sensor_config.get("device_class")
         self._attr_unit_of_measurement = sensor_config.get("unit")
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN)},
+            manufacturer=MANUFACTURER,
+            name=DEFAULT_NAME,
+            configuration_url=HOME_URL,
+        )
+
 
     @property
     def available(self) -> bool:
