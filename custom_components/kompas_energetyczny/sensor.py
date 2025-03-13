@@ -1,8 +1,10 @@
+"""Sensors for Kompas Energetyczny"""
+
 import logging
 from datetime import datetime, timedelta
-from homeassistant.components.sensor import SensorEntity, SensorDeviceClass
+from homeassistant.components.sensor import SensorEntity, SensorDeviceClass, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import UnitOfPower
+from homeassistant.const import UnitOfPower, PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
@@ -12,7 +14,7 @@ from homeassistant.util import dt as dt_util
 import requests
 from .const import DOMAIN, MANUFACTURER, DEFAULT_NAME, HOME_URL, ROUNDING
 
-# https://developers.home-assistant.io/docs/core/entity/sensor/#available-state-classes
+# https://developers.home-assistant.io/docs/core/entity/sensor/
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,8 +34,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
         {"key": "generacja", "name": "Production", "device_class": SensorDeviceClass.POWER, "unit": UnitOfPower.MEGA_WATT},
         {"key": "zapotrzebowanie", "name": "Demand", "device_class": SensorDeviceClass.POWER, "unit": UnitOfPower.MEGA_WATT},
         {"key": "cieplne", "name": "cieplne", "device_class": SensorDeviceClass.POWER, "unit": UnitOfPower.MEGA_WATT},
-        {"key": "power_demand_coverage", "name": "Power Demand Coverage", "unit": "%"},
-        {"key": "power_renewable", "name": "Renewable Share", "unit": "%"},
+        {"key": "power_demand_coverage", "name": "Power Demand Coverage", "unit": PERCENTAGE},
+        {"key": "power_renewable", "name": "Renewable Share", "unit": PERCENTAGE},
 #        {"key": "timestamp", "name": "Timestamp", "device_class": "timestamp"},
     ]
     entities = [ KompasEnergetycznySensor(coordinator, sensor_config) for sensor_config in sensors ]
