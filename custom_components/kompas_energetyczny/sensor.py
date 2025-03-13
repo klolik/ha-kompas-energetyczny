@@ -12,7 +12,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 import requests
-from .const import DOMAIN, MANUFACTURER, DEFAULT_NAME, HOME_URL, ROUNDING
+from .const import DOMAIN, MANUFACTURER, DEFAULT_NAME, HOME_URL, PRECISION
 
 # https://developers.home-assistant.io/docs/core/entity/sensor/
 
@@ -78,6 +78,7 @@ class KompasEnergetycznySensor(SensorEntity):
         self._attr_unique_id = f"{self._coordinator.entry.entry_id}_{self._sensor_key}"
         self._attr_device_class = sensor_config.get("device_class")
         self._attr_native_unit_of_measurement = sensor_config.get("unit")
+        self._attr_suggested_display_precision = PRECISION
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, DOMAIN)},
@@ -103,12 +104,12 @@ class KompasEnergetycznySensor(SensorEntity):
 #                return dt_util.parse_datetime(value)
             return value
         if self._sensor_key == "power_demand_coverage":
-            return round(podsumowanie["generacja"] / podsumowanie["zapotrzebowanie"] * 100, ROUNDING)
+            return podsumowanie["generacja"] / podsumowanie["zapotrzebowanie"] * 100
         if self._sensor_key == "power_renewable":
             # assume `inne` is renewable
             generacja = podsumowanie["generacja"]
             cieplne = podsumowanie["cieplne"]
-            return round((generacja - cieplne) / generacja * 100, ROUNDING)
+            return (generacja - cieplne) / generacja * 100
         return None
 
     async def async_added_to_hass(self) -> None:

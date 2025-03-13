@@ -5,4 +5,4 @@ DEFAULT_URL = "https://kompasen-dcgbapbjg3fkb5gp.a01.azurefd.net/datafile/przesy
 HOME_URL = "https://www.energetycznykompas.pl/"
 
 # Value rounding precision, namely percentage
-ROUNDING = 2
+PRECISION = 2
