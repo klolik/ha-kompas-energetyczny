@@ -1,7 +1,8 @@
 import logging
 from datetime import datetime, timedelta
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorEntity, SensorDeviceClass
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import UnitOfPower
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -9,6 +10,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 import requests
 from .const import DOMAIN, DEFAULT_NAME
+
+# https://developers.home-assistant.io/docs/core/entity/sensor/#available-state-classes
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,12 +25,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
 
     _LOGGER.info("setting up sensors")
     sensors = [
-        {"key": "wodne", "name": "wodne", "device_class": None},
-        {"key": "wiatrowe", "name": "wiatrowe", "device_class": None},
-        {"key": "PV", "name": "PV", "device_class": None},
-        {"key": "generacja", "name": "generacja", "device_class": None},
-        {"key": "zapotrzebowanie", "name": "zapotrzebowanie", "device_class": None},
-        {"key": "cieplne", "name": "cieplne", "device_class": None},
+        {"key": "wodne", "name": "Water", "device_class": SensorDeviceClass.POWER, "unit": UnitOfPower.MEGA_WATT},
+        {"key": "wiatrowe", "name": "Wind", "device_class": SensorDeviceClass.POWER, "unit": UnitOfPower.MEGA_WATT},
+        {"key": "PV", "name": "Sun", "device_class": SensorDeviceClass.POWER, "unit": UnitOfPower.MEGA_WATT},
+        {"key": "generacja", "name": "Production", "device_class": SensorDeviceClass.POWER, "unit": UnitOfPower.MEGA_WATT},
+        {"key": "zapotrzebowanie", "name": "Demand", "device_class": SensorDeviceClass.POWER, "unit": UnitOfPower.MEGA_WATT},
+        {"key": "cieplne", "name": "cieplne", "device_class": SensorDeviceClass.POWER, "unit": UnitOfPower.MEGA_WATT},
+        {"key": "power_demand_coverage", "name": "Power Demand Coverage", "unit": "%"},
+        {"key": "power_renewable", "name": "Renewable Share", "unit": "%"},
 #        {"key": "timestamp", "name": "Timestamp", "device_class": "timestamp"},
     ]
     entities = [ KompasEnergetycznySensor(coordinator, sensor_config) for sensor_config in sensors ]
@@ -77,13 +82,27 @@ class KompasEnergetycznySensor(SensorEntity):
 
     @property
     def native_value(self):
+        # {"status":"0","timestamp":1741901100661,"data":{
+        # "przesyly":[{"wartosc":559,"rownolegly":false,"wartosc_plan":562,"id":"SE"},{"wartosc":-1415,"rownolegly":true,"wartosc_plan":-2405,"id":"DE"},{"wartosc":-1142,"rownolegly":true,"wartosc_plan":-452,"id":"CZ"},{"wartosc":-489,"rownolegly":true,"wartosc_plan":-130,"id":"SK"},{"wartosc":39,"rownolegly":false,"wartosc_plan":0,"id":"UA"},{"wartosc":-123,"rownolegly":false,"wartosc_plan":-39,"id":"LT"}],
+        # "podsumowanie":{"wodne":145,"wiatrowe":3945,"PV":0,"generacja":21473,"zapotrzebowanie":18910,"czestotliwosc":50.015,"inne":0,"cieplne":17383}}}
         podsumowanie = self._coordinator.data.get("data", {}).get("podsumowanie", {})
         if self._sensor_key in podsumowanie:
             value = podsumowanie[self._sensor_key]
 #            if self._sensor_key == "timestamp":
 #                return dt_util.parse_datetime(value)
             return value
+        if self._sensor_key == "power_demand_coverage":
+            return round(podsumowanie["generacja"] / podsumowanie["zapotrzebowanie"] * 100, 2)
+        if self._sensor_key == "power_renewable":
+            # assume `inne` is renewable
+            generacja = podsumowanie["generacja"]
+            cieplne = podsumowanie["cieplne"]
+            return round((generacja - cieplne) / generacja * 100, 2)
         return None
+
+    @property
+    def native_unit_of_measurement(self) -> str | None:
+        return self._attr_unit_of_measurement
 
     async def async_added_to_hass(self) -> None:
         self.async_on_remove(
