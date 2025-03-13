@@ -19,14 +19,14 @@ from .const import DOMAIN, MANUFACTURER, DEFAULT_NAME, HOME_URL, ROUNDING
 _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback) -> bool:
-    _LOGGER.info("setting up coordinator for %s", entry)
+    _LOGGER.debug("setting up coordinator for %s", entry)
     coordinator = KompasEnergetycznyDataUpdateCoordinator(hass, entry)
-    _LOGGER.info("awaiting coordinator first refresh %s", entry)
+    _LOGGER.debug("awaiting coordinator first refresh %s", entry)
     await coordinator.async_config_entry_first_refresh()
-    _LOGGER.info("assigning coordinator %s", entry)
+    _LOGGER.debug("assigning coordinator %s", entry)
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
-    _LOGGER.info("setting up sensors")
+    _LOGGER.debug("setting up sensors")
     sensors = [
         {"key": "wodne", "name": "Water", "device_class": SensorDeviceClass.POWER, "unit": UnitOfPower.MEGA_WATT},
         {"key": "wiatrowe", "name": "Wind", "device_class": SensorDeviceClass.POWER, "unit": UnitOfPower.MEGA_WATT},
@@ -45,7 +45,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
 
 class KompasEnergetycznyDataUpdateCoordinator(DataUpdateCoordinator):
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
-        _LOGGER.info("initializing coordinator: %s", entry)
+        _LOGGER.debug("initializing coordinator: %s", entry)
         super().__init__(
             hass,
             _LOGGER,
@@ -54,16 +54,16 @@ class KompasEnergetycznyDataUpdateCoordinator(DataUpdateCoordinator):
         )
         self.entry = entry
         self.url = entry.data.get("url")
-        _LOGGER.info("url: %s", self.url)
+        _LOGGER.debug("url: %s", self.url)
         self.data = None
 
     async def _async_update_data(self):
         try:
-            _LOGGER.info("calling %s", self.url)
+            _LOGGER.debug("calling %s", self.url)
             response = await self.hass.async_add_executor_job(requests.get, self.url)
             response.raise_for_status()
             self.data = response.json()
-            _LOGGER.info("received %s", self.data)
+            _LOGGER.debug("received %s", self.data)
             return self.data
         except requests.exceptions.RequestException as ex:
             raise UpdateFailed(f"Error communicating with API: {ex}") from ex
@@ -71,7 +71,7 @@ class KompasEnergetycznyDataUpdateCoordinator(DataUpdateCoordinator):
 class KompasEnergetycznySensor(SensorEntity):
     def __init__(self, coordinator: DataUpdateCoordinator, sensor_config: dict) -> None:
         super().__init__()
-        _LOGGER.info("setting up %s", sensor_config)
+        _LOGGER.debug("setting up %s", sensor_config)
         self._coordinator = coordinator
         self._sensor_key = sensor_config["key"]
         self._attr_name = f"{DEFAULT_NAME} {sensor_config['name']}"
