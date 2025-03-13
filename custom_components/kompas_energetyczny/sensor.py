@@ -83,6 +83,7 @@ class KompasEnergetycznySensor(SensorEntity):
             name=DEFAULT_NAME,
             configuration_url=HOME_URL,
         )
+        self._attr_state_class = SensorStateClass.MEASUREMENT
 
     @property
     def available(self) -> bool:
