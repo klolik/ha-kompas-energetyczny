@@ -108,3 +108,7 @@ class KompasEnergetycznySensor(SensorEntity):
         self.async_on_remove(
             self._coordinator.async_add_listener(self.async_write_ha_state)
         )
+
+#TODO#class KompasEnergetycznyPowerSensor(SensorEntity): # technology power [MW]
+#TODO#class KompasEnergetycznyPowerShareSensor(SensorEntity): # % of total production per technology [%]
+#TODO#class KompasEnergetycznyRenewablePowerShare(SensorEntity): # % of renewables
