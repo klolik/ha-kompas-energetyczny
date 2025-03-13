@@ -28,7 +28,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.config_entries.async_setup_platform(
             entry,
             "sensor",
-            {**sensor_config},
+            KompasEnergetycznySensor(coordinator, sensor_config),
             coordinator,
         )
     return True
