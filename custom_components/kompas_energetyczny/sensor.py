@@ -75,7 +75,7 @@ class KompasEnergetycznySensor(SensorEntity):
         self._attr_name = f"{DEFAULT_NAME} {sensor_config['name']}"
         self._attr_unique_id = f"{self._coordinator.entry.entry_id}_{self._sensor_key}"
         self._attr_device_class = sensor_config.get("device_class")
-        self._attr_unit_of_measurement = sensor_config.get("unit")
+        self._attr_native_unit_of_measurement = sensor_config.get("unit")
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN)},
@@ -83,7 +83,6 @@ class KompasEnergetycznySensor(SensorEntity):
             name=DEFAULT_NAME,
             configuration_url=HOME_URL,
         )
-
 
     @property
     def available(self) -> bool:
@@ -108,10 +107,6 @@ class KompasEnergetycznySensor(SensorEntity):
             cieplne = podsumowanie["cieplne"]
             return round((generacja - cieplne) / generacja * 100, 2)
         return None
-
-    @property
-    def native_unit_of_measurement(self) -> str | None:
-        return self._attr_unit_of_measurement
 
     async def async_added_to_hass(self) -> None:
         self.async_on_remove(
