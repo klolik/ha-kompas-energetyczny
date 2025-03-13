@@ -80,7 +80,7 @@ class KompasEnergetycznySensor(SensorEntity):
         self._attr_native_unit_of_measurement = sensor_config.get("unit")
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN)},
+            identifiers={(DOMAIN, DOMAIN)},
             manufacturer=MANUFACTURER,
             name=DEFAULT_NAME,
             configuration_url=HOME_URL,
