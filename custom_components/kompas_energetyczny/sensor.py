@@ -1,4 +1,17 @@
 """Sensors for Kompas Energetyczny"""
+# https://developers.home-assistant.io/docs/core/entity/sensor/
+
+# {"status":"0","timestamp":1741901100661,"data":{
+#   "przesyly":[
+#       {"wartosc":559,"rownolegly":false,"wartosc_plan":562,"id":"SE"},
+#       {"wartosc":-1415,"rownolegly":true,"wartosc_plan":-2405,"id":"DE"},
+#       {"wartosc":-1142,"rownolegly":true,"wartosc_plan":-452,"id":"CZ"},
+#       {"wartosc":-489,"rownolegly":true,"wartosc_plan":-130,"id":"SK"},
+#       {"wartosc":39,"rownolegly":false,"wartosc_plan":0,"id":"UA"},
+#       {"wartosc":-123,"rownolegly":false,"wartosc_plan":-39,"id":"LT"}
+#   ],
+#   "podsumowanie":{"wodne":145,"wiatrowe":3945,"PV":0,"generacja":21473,"zapotrzebowanie":18910,"czestotliwosc":50.015,"inne":0,"cieplne":17383}
+# }}
 
 import logging
 from datetime import datetime, timedelta
@@ -14,9 +27,9 @@ from homeassistant.util import dt as dt_util
 import requests
 from .const import DOMAIN, MANUFACTURER, DEFAULT_NAME, HOME_URL, PRECISION
 
-# https://developers.home-assistant.io/docs/core/entity/sensor/
 
 _LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback) -> bool:
     _LOGGER.debug("setting up coordinator for %s", entry)
@@ -28,17 +41,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
 
     _LOGGER.debug("setting up sensors")
     sensors = [
-        {"key": "wodne", "name": "Water", "device_class": SensorDeviceClass.POWER, "unit": UnitOfPower.MEGA_WATT},
-        {"key": "wiatrowe", "name": "Wind", "device_class": SensorDeviceClass.POWER, "unit": UnitOfPower.MEGA_WATT},
-        {"key": "PV", "name": "Sun", "device_class": SensorDeviceClass.POWER, "unit": UnitOfPower.MEGA_WATT},
-        {"key": "generacja", "name": "Production", "device_class": SensorDeviceClass.POWER, "unit": UnitOfPower.MEGA_WATT},
-        {"key": "zapotrzebowanie", "name": "Demand", "device_class": SensorDeviceClass.POWER, "unit": UnitOfPower.MEGA_WATT},
-        {"key": "cieplne", "name": "Fossil", "device_class": SensorDeviceClass.POWER, "unit": UnitOfPower.MEGA_WATT},
-        {"key": "power_demand_coverage", "name": "Power Demand Coverage", "unit": PERCENTAGE},
-        {"key": "power_renewable", "name": "Renewable Share", "unit": PERCENTAGE},
+        {"key": "wodne", "name": "Hydro"},
+        {"key": "wiatrowe", "name": "Wind"},
+        {"key": "PV", "name": "Solar"},
+        {"key": "generacja", "name": "Production"},
+        {"key": "zapotrzebowanie", "name": "Consumption"},
+        {"key": "cieplne", "name": "Fossil"},
 #        {"key": "timestamp", "name": "Timestamp", "device_class": "timestamp"},
     ]
-    entities = [ KompasEnergetycznySensor(coordinator, sensor_config) for sensor_config in sensors ]
+
+    entities = [ KompasEnergetycznyPowerSensor(coordinator, **cfg) for cfg in sensors ]
+    # generacja_share would always be 100% of generacja, so skip it
+    entities.extend([ KompasEnergetycznyPowerGenerationShareSensor(coordinator, **cfg) for cfg in sensors if cfg["key"] not in ["generacja", "zapotrzebowanie"]])
+    entities.append(KompasEnergetycznyPowerConsumptionShareSensor(coordinator, "generacja", "Consumption"))
+    entities.append(KompasEnergetycznyRenewableShareSensor(coordinator))
+    entities.append(KompasEnergetycznyPowerImportSensor(coordinator))
 
     async_add_entities(entities)
     return True
@@ -117,7 +134,114 @@ class KompasEnergetycznySensor(SensorEntity):
             self._coordinator.async_add_listener(self.async_write_ha_state)
         )
 
-#TODO#class KompasEnergetycznyPowerSensor(SensorEntity): # technology power [MW]
-#TODO#class KompasEnergetycznyPowerShareSensor(SensorEntity): # % of total production per technology [%]
-#TODO#class KompasEnergetycznyRenewablePowerShare(SensorEntity): # % of renewables
-#TODO#class KompasEnergetycznyPowerImport(SensorEntity): # zapotrzebowanie-produkcja
+
+class KompasEnergetycznyBaseSensor(SensorEntity):
+    """Base class with common attributes"""
+
+    def __init__(self, coordinator: DataUpdateCoordinator, src: str, sid: str, name: str) -> None:
+        """Initialize sensor with src: json data key, sid: entity id, name: display name"""
+        super().__init__()
+        _LOGGER.debug("setting up %s", sid)
+        self._coordinator = coordinator
+        self._podsumowanie_key = src
+        self._attr_name = f"{DEFAULT_NAME} {name}"
+        self._attr_unique_id = f"{self._coordinator.entry.entry_id}_{sid}"
+        self._attr_state_class = SensorStateClass.MEASUREMENT
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, DOMAIN)},
+            manufacturer=MANUFACTURER,
+            name=DEFAULT_NAME,
+            configuration_url=HOME_URL,
+        )
+
+    async def async_added_to_hass(self) -> None:
+        self.async_on_remove(
+            self._coordinator.async_add_listener(self.async_write_ha_state)
+        )
+
+    @property
+    def available(self) -> bool:
+        return self._coordinator.last_update_success
+
+
+class KompasEnergetycznyPowerSensor(KompasEnergetycznyBaseSensor):
+    def __init__(self, coordinator: DataUpdateCoordinator, key: str, name: str) -> None:
+        super().__init__(coordinator, key, key, f"{name} Power")
+        self._attr_device_class = SensorDeviceClass.POWER
+        self._attr_native_unit_of_measurement = UnitOfPower.MEGA_WATT
+        self._attr_state_class = SensorStateClass.MEASUREMENT
+
+    @property
+    def native_value(self):
+        podsumowanie = self._coordinator.data.get("data", {}).get("podsumowanie", {})
+        # we shall return None if missing, so just pass through None as well
+        return podsumowanie.get(self._podsumowanie_key)
+
+
+class KompasEnergetycznyPowerImportSensor(KompasEnergetycznyBaseSensor):
+    def __init__(self, coordinator: DataUpdateCoordinator) -> None:
+        super().__init__(coordinator, None, "power_import", "Power Import")
+        self._attr_device_class = SensorDeviceClass.POWER
+        self._attr_native_unit_of_measurement = UnitOfPower.MEGA_WATT
+        self._attr_state_class = SensorStateClass.MEASUREMENT
+
+    @property
+    def native_value(self):
+        podsumowanie = self._coordinator.data.get("data", {}).get("podsumowanie", {})
+        generacja = podsumowanie.get("generacja")
+        zapotrzebowanie = podsumowanie.get("zapotrzebowanie")
+        if generacja is not None and zapotrzebowanie is not None:
+            return zapotrzebowanie - generacja
+        return None
+
+
+class KompasEnergetycznyPowerGenerationShareSensor(KompasEnergetycznyBaseSensor):
+    def __init__(self, coordinator: DataUpdateCoordinator, key: str, name: str) -> None:
+        super().__init__(coordinator, key, f"{key}_share", f"{name} Share")
+        self._attr_native_unit_of_measurement = PERCENTAGE
+        self._attr_state_class = SensorStateClass.MEASUREMENT
+        self._attr_suggested_display_precision = 1
+
+    @property
+    def native_value(self):
+        podsumowanie = self._coordinator.data.get("data", {}).get("podsumowanie", {})
+        value = podsumowanie.get(self._podsumowanie_key)
+        generacja = podsumowanie.get("generacja")
+        if value is not None and generacja is not None:
+            return value / generacja * 100
+        return None
+
+
+class KompasEnergetycznyPowerConsumptionShareSensor(KompasEnergetycznyBaseSensor):
+    def __init__(self, coordinator: DataUpdateCoordinator, key: str, name: str) -> None:
+        super().__init__(coordinator, key, f"{key}_coverage", f"{name} Coverage")
+        self._attr_native_unit_of_measurement = PERCENTAGE
+        self._attr_state_class = SensorStateClass.MEASUREMENT
+        self._attr_suggested_display_precision = 1
+
+    @property
+    def native_value(self):
+        podsumowanie = self._coordinator.data.get("data", {}).get("podsumowanie", {})
+        value = podsumowanie.get(self._podsumowanie_key)
+        zapotrzebowanie = podsumowanie.get("zapotrzebowanie")
+        if value is not None and zapotrzebowanie is not None:
+            return value / zapotrzebowanie * 100
+        return None
+
+
+class KompasEnergetycznyRenewableShareSensor(KompasEnergetycznyBaseSensor):
+    def __init__(self, coordinator: DataUpdateCoordinator) -> None:
+        super().__init__(coordinator, None, f"renewable_share", f"Renewable Share")
+        self._attr_native_unit_of_measurement = PERCENTAGE
+        self._attr_state_class = SensorStateClass.MEASUREMENT
+        self._attr_suggested_display_precision = 1
+
+    @property
+    def native_value(self):
+        podsumowanie = self._coordinator.data.get("data", {}).get("podsumowanie", {})
+        generacja = podsumowanie.get("generacja")
+        cieplne = podsumowanie.get("cieplne")
+        if generacja is not None and cieplne is not None:
+            return (generacja - cieplne) / generacja * 100
+        return None
