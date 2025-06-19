@@ -1,6 +1,7 @@
 """Sensors for Kompas Energetyczny"""
 # https://developers.home-assistant.io/docs/core/entity/sensor/
 
+# $ curl https://kompasen-dcgbapbjg3fkb5gp.a01.azurefd.net/datafile/przesyly.json
 # {"status":"0","timestamp":1741901100661,"data":{
 #   "przesyly":[
 #       {"wartosc":559,"rownolegly":false,"wartosc_plan":562,"id":"SE"},
@@ -12,6 +13,22 @@
 #   ],
 #   "podsumowanie":{"wodne":145,"wiatrowe":3945,"PV":0,"generacja":21473,"zapotrzebowanie":18910,"czestotliwosc":50.015,"inne":0,"cieplne":17383}
 # }}
+
+# $ curl -s 'https://v1.api.raporty.pse.pl/api/pdgsz?$filter=business_date%20eq%20%272025-06-19%27' |jq .
+#
+# {
+#   "value": [
+#     {
+#       "udtczas": "2025-06-19 00:00:00",
+#       "zap_kse": 0,
+#       "znacznik": 1, # 0: zalecane uzytkowanie, 1: normalne uzytkowanie, 2: zalecane oszczedzanie, 3: wymagane ograniczenie
+#       "business_date": "2025-06-19",
+#       "source_datetime": "2025-06-19 17:22"
+#     },
+#     [...]
+#   ]
+# }
+#
 
 import logging
 from datetime import datetime, timedelta
@@ -25,7 +42,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 import requests
-from .const import DOMAIN, MANUFACTURER, DEFAULT_NAME, HOME_URL, PRECISION
+from .const import DOMAIN, MANUFACTURER, DEFAULT_NAME, HOME_URL, PRECISION, URL_PDGSZ, STATUS_MAP
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -36,10 +53,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     coordinator = KompasEnergetycznyDataUpdateCoordinator(hass, entry)
     _LOGGER.debug("awaiting coordinator first refresh %s", entry)
     await coordinator.async_config_entry_first_refresh()
+
+    _LOGGER.debug("setting up pdgsz coordinator for %s", entry)
+    coordinator_pdgsz = KompasEnergetycznyPdgszDataUpdateCoordinator(hass, entry)
+    _LOGGER.debug("awaiting pdgsz coordinator first refresh %s", entry)
+    await coordinator_pdgsz.async_config_entry_first_refresh()
+
     _LOGGER.debug("assigning coordinator %s", entry)
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
+        "coordinator": coordinator,
+        "coordinator_pdgsz": coordinator_pdgsz,
+    }
 
     _LOGGER.debug("setting up sensors")
+    #TODO# support user controls to disable certain sensors
     sensors = [
         {"key": "wodne", "name": "Hydro"},
         {"key": "wiatrowe", "name": "Wind"},
@@ -47,7 +74,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
         {"key": "generacja", "name": "Production"},
         {"key": "zapotrzebowanie", "name": "Consumption"},
         {"key": "cieplne", "name": "Fossil"},
-#        {"key": "timestamp", "name": "Timestamp", "device_class": "timestamp"},
     ]
 
     entities = [ KompasEnergetycznyPowerSensor(coordinator, **cfg) for cfg in sensors ]
@@ -56,9 +82,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     entities.append(KompasEnergetycznyPowerConsumptionShareSensor(coordinator, "generacja", "Consumption"))
     entities.append(KompasEnergetycznyRenewableShareSensor(coordinator))
     entities.append(KompasEnergetycznyPowerImportSensor(coordinator))
+    entities.append(KompasEnergetycznyStatusSensor(coordinator_pdgsz))
 
     async_add_entities(entities)
     return True
+
 
 class KompasEnergetycznyDataUpdateCoordinator(DataUpdateCoordinator):
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
@@ -232,7 +260,7 @@ class KompasEnergetycznyPowerConsumptionShareSensor(KompasEnergetycznyBaseSensor
 
 class KompasEnergetycznyRenewableShareSensor(KompasEnergetycznyBaseSensor):
     def __init__(self, coordinator: DataUpdateCoordinator) -> None:
-        super().__init__(coordinator, None, f"renewable_share", f"Renewable Share")
+        super().__init__(coordinator, None, "renewable_share", "Renewable Share")
         self._attr_native_unit_of_measurement = PERCENTAGE
         self._attr_state_class = SensorStateClass.MEASUREMENT
         self._attr_suggested_display_precision = 1
@@ -245,3 +273,49 @@ class KompasEnergetycznyRenewableShareSensor(KompasEnergetycznyBaseSensor):
         if generacja is not None and cieplne is not None:
             return (generacja - cieplne) / generacja * 100
         return None
+
+
+class KompasEnergetycznyPdgszDataUpdateCoordinator(DataUpdateCoordinator):
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+        _LOGGER.debug("initializing pdgsz coordinator: %s", entry)
+        super().__init__(hass, _LOGGER, name=entry.title, update_interval=timedelta(seconds=300))
+        self.entry = entry
+        self.data = None
+
+    async def _async_update_data(self):
+        try:
+            today = dt_util.now() #TODO# ensure its Poland time zone aware
+            url = URL_PDGSZ.format(today.strftime("%Y-%m-%d"))
+            _LOGGER.debug("calling pdgsz %s", url)
+            response = await self.hass.async_add_executor_job(requests.get, url)
+            response.raise_for_status()
+            self.raw_data = response.json()
+            self.data = self.raw_data
+            _LOGGER.debug("received pdgsz %s", self.data)
+            return self.data
+        except requests.exceptions.RequestException as ex:
+            raise UpdateFailed(f"Error communicating with pdgsz API: {ex}") from ex
+
+
+class KompasEnergetycznyStatusSensor(KompasEnergetycznyBaseSensor):
+    def __init__(self, coordinator: DataUpdateCoordinator) -> None:
+        super().__init__(coordinator, None, "status", "Status")
+        self._attr_device_class = SensorDeviceClass.ENUM
+        self._attr_options = list(STATUS_MAP.values())
+        self._attr_state_class = None
+
+    @property
+    def native_value(self):
+        pdgsz = self._coordinator.data.get("value", [])
+        now_hour = dt_util.now().hour
+        _LOGGER.debug("now_hour: %s", now_hour)
+        _LOGGER.debug("pdgsz: %s", pdgsz)
+        for item in pdgsz:
+#            _LOGGER.debug("item: %s", item)
+            if datetime.fromisoformat(item.get("udtczas")).hour == now_hour:
+                return STATUS_MAP.get(item.get("znacznik"))
+        return None
+
+    @property
+    def extra_state_attributes(self):
+        return self._coordinator.data
