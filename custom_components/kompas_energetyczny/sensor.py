@@ -51,7 +51,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     api_data = hass.data[DOMAIN][entry.entry_id]
 
     _LOGGER.debug("setting up sensors")
-    #TODO# support user controls to disable certain sensors
+    #TODO# config flow to disable certain sensors
     sensors = [
         {"key": "wodne", "name": "Hydro"},
         {"key": "wiatrowe", "name": "Wind"},
