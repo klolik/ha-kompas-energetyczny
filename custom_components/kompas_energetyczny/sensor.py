@@ -194,17 +194,23 @@ class KompasEnergetycznyStatusSensor(KompasEnergetycznyBaseSensor):
         self._attr_options = list(STATUS_MAP.values())
         self._attr_state_class = None
 
-    @property
-    def native_value(self):
+    def get_znacznik(self):
+        """ Return raw value of `znacznik` property"""
         pdgsz = self.api_data.coordinator_pdgsz.data.get("value", [])
         now_hour = dt_util.now().hour
         _LOGGER.debug("now_hour: %s", now_hour)
         _LOGGER.debug("pdgsz: %s", pdgsz)
         for item in pdgsz:
             if datetime.fromisoformat(item.get("udtczas")).hour == now_hour:
-                return STATUS_MAP.get(item.get("znacznik"))
+                return item.get("znacznik")
         return None
 
     @property
+    def native_value(self):
+        znacznik = self.get_znacznik()
+        return STATUS_MAP.get(znacznik, None)
+
+    @property
     def extra_state_attributes(self):
-        return self.api_data.coordinator_pdgsz.data
+        znacznik = self.get_znacznik()
+        return {**self.api_data.coordinator_pdgsz.data, "znacznik": znacznik}
