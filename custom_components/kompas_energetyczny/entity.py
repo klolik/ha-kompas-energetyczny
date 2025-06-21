@@ -10,7 +10,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from homeassistant.util import dt as dt_util
 import requests
 
-from .const import DOMAIN, API_URL_SZCZYT
+from .const import API_URL_SZCZYT
 
 _LOGGER = logging.getLogger(__name__)
 
