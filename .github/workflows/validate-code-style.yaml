@@ -2,7 +2,11 @@ name: Validate Code Style
 
 on:
   push:
+    branches:
+      - main
   pull_request:
+    branches:
+      - main
 
 jobs:
   validate-code-style:
