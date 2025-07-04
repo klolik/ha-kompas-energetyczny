@@ -1,13 +1,14 @@
 {
     "domain": "kompas_energetyczny",
     "name": "Kompas Energetyczny",
-    "documentation": "https://github.com/klolik/ha-energetyczny-kompas",
-    "dependencies": [],
     "codeowners": ["@klolik"],
-    "requirements": [],
-    "version": "0.1.0",
-    "iot_class": "cloud_polling",
-    "integration_type": "service",
     "config_flow": true,
-    "single_config_entry": true
+    "dependencies": [],
+    "documentation": "https://github.com/klolik/ha-kompas-energetyczny",
+    "integration_type": "service",
+    "iot_class": "cloud_polling",
+    "issue_tracker": "https://github.com/klolik/ha-kompas-energetyczny/issues",
+    "requirements": [],
+    "single_config_entry": true,
+    "version": "0.1.0"
 }

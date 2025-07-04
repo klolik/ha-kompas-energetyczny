@@ -1,0 +1,28 @@
+name: Release
+on:
+  workflow_dispatch:
+    inputs:
+      prerelease:
+        type: boolean
+        description: Mark the release as prerelease
+
+jobs:
+  release:
+    name: Create Release
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Fetch custom component version
+        run: |
+          cc_version=$(jq -r .version custom_components/*/manifest.json)
+          echo "cc_version=${cc_version}" >> $GITHUB_ENV
+
+      - name: Create Release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ env.cc_version }}
+          commit: ${{ github.sha }}
+          generateReleaseNotes: true
+          prerelease: ${{ inputs.prerelease }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
