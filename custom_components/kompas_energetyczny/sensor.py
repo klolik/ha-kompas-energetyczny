@@ -56,7 +56,7 @@ class KompasEnergetycznyBaseSensor(SensorEntity):
         self.api_data = api_data
         self._podsumowanie_key = src
         self._attr_name = f"{DEFAULT_NAME} {name}"
-        self._attr_unique_id = f"{self.api_data.coordinator.entry.entry_id}_{sid}"
+        self._attr_unique_id = f"{self.api_data.coordinator.config_entry.entry_id}_{sid}"
         self._attr_state_class = SensorStateClass.MEASUREMENT
         self._attr_device_info = self.api_data.device
 

@@ -35,10 +35,10 @@ class KompasEnergetycznyDataUpdateCoordinator(DataUpdateCoordinator):
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=entry,
             name=entry.title,
             update_interval=timedelta(seconds=300)
         )
-        self.entry = entry
         self.url = entry.data.get("url")
         _LOGGER.debug("url: %s", self.url)
         self.data = None
@@ -95,10 +95,10 @@ class KompasEnergetycznyPdgszDataUpdateCoordinator(DataUpdateCoordinator):
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=entry,
             name=entry.title,
             update_interval=timedelta(seconds=300)
         )
-        self.entry = entry
         self.data = None
 
     async def _async_update_data(self):
