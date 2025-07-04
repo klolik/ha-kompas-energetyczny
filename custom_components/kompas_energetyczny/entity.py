@@ -28,15 +28,14 @@ _LOGGER = logging.getLogger(__name__)
 #   "podsumowanie":{"wodne":145,"wiatrowe":3945,"PV":0,"generacja":21473,"zapotrzebowanie":18910,"czestotliwosc":50.015,"inne":0,"cieplne":17383}
 # }}
 
+
 class KompasEnergetycznyDataUpdateCoordinator(DataUpdateCoordinator):
     """Power data polling coordinator"""
+
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         _LOGGER.debug("initializing coordinator: %s", entry)
         super().__init__(
-            hass,
-            _LOGGER,
-            name=entry.title,
-            update_interval=timedelta(seconds=300)
+            hass, _LOGGER, name=entry.title, update_interval=timedelta(seconds=300)
         )
         self.entry = entry
         self.url = entry.data.get("url")
@@ -88,22 +87,21 @@ class KompasEnergetycznyDataUpdateCoordinator(DataUpdateCoordinator):
 #   ]
 # }
 
+
 class KompasEnergetycznyPdgszDataUpdateCoordinator(DataUpdateCoordinator):
     """Peak Hours data polling coordinator"""
+
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         _LOGGER.debug("initializing pdgsz coordinator: %s", entry)
         super().__init__(
-            hass,
-            _LOGGER,
-            name=entry.title,
-            update_interval=timedelta(seconds=300)
+            hass, _LOGGER, name=entry.title, update_interval=timedelta(seconds=300)
         )
         self.entry = entry
         self.data = None
 
     async def _async_update_data(self):
         try:
-            today = dt_util.now() #TODO# ensure its Poland time zone aware
+            today = dt_util.now()  # TODO# ensure its Poland time zone aware
             url = API_URL_RAPORTY_V2.format(today.strftime("%Y-%m-%d"))
             _LOGGER.debug("calling pdgsz %s", url)
             response = await self.hass.async_add_executor_job(requests.get, url)
@@ -118,6 +116,7 @@ class KompasEnergetycznyPdgszDataUpdateCoordinator(DataUpdateCoordinator):
 @dataclass
 class KompasEnergetycznyApiData:
     """hass.data DOMAIN entry data"""
+
     device: DeviceInfo
     coordinator: KompasEnergetycznyDataUpdateCoordinator
     coordinator_pdgsz: KompasEnergetycznyPdgszDataUpdateCoordinator

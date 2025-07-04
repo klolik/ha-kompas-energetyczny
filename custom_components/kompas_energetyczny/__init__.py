@@ -8,7 +8,11 @@ from homeassistant.const import Platform
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 
 from .const import DOMAIN, MANUFACTURER, DEFAULT_NAME, HOME_URL, PRECISION, STATUS_MAP
-from .entity import KompasEnergetycznyDataUpdateCoordinator, KompasEnergetycznyPdgszDataUpdateCoordinator, KompasEnergetycznyApiData
+from .entity import (
+    KompasEnergetycznyDataUpdateCoordinator,
+    KompasEnergetycznyPdgszDataUpdateCoordinator,
+    KompasEnergetycznyApiData,
+)
 
 
 PLATFORMS = [Platform.SENSOR]
@@ -45,7 +49,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         configuration_url=HOME_URL,
     )
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = KompasEnergetycznyApiData(device, coordinator, coordinator_pdgsz)
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = KompasEnergetycznyApiData(
+        device, coordinator, coordinator_pdgsz
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
