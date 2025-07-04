@@ -2,10 +2,15 @@
 
 import logging
 from homeassistant import config_entries
+from homeassistant.helpers.config_validation import empty_config_schema
 import voluptuous as vol
 from .const import DOMAIN, API_URL_PRZESYLY
 
 _LOGGER = logging.getLogger(__name__)
+
+
+CONFIG_SCHEMA = empty_config_schema
+
 
 class KompasEnergetycznyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Config Flow for KompasEnergetyczny"""
