@@ -1,7 +1,8 @@
 {
     "domain": "kompas_energetyczny",
     "name": "Kompas Energetyczny",
-    "documentation": "https://github.com/klolik/ha-energetyczny-kompas",
+    "documentation": "https://github.com/klolik/ha-kompas-energetyczny",
+    "issue_tracker": "https://github.com/klolik/ha-kompas-energetyczny/issues"
     "dependencies": [],
     "codeowners": ["@klolik"],
     "requirements": [],
