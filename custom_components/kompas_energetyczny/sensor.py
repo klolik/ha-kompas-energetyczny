@@ -1,37 +1,9 @@
 """Sensors for Kompas Energetyczny"""
 # https://developers.home-assistant.io/docs/core/entity/sensor/
 
-# $ curl https://kompasen-dcgbapbjg3fkb5gp.a01.azurefd.net/datafile/przesyly.json
-# {"status":"0","timestamp":1741901100661,"data":{
-#   "przesyly":[
-#       {"wartosc":559,"rownolegly":false,"wartosc_plan":562,"id":"SE"},
-#       {"wartosc":-1415,"rownolegly":true,"wartosc_plan":-2405,"id":"DE"},
-#       {"wartosc":-1142,"rownolegly":true,"wartosc_plan":-452,"id":"CZ"},
-#       {"wartosc":-489,"rownolegly":true,"wartosc_plan":-130,"id":"SK"},
-#       {"wartosc":39,"rownolegly":false,"wartosc_plan":0,"id":"UA"},
-#       {"wartosc":-123,"rownolegly":false,"wartosc_plan":-39,"id":"LT"}
-#   ],
-#   "podsumowanie":{"wodne":145,"wiatrowe":3945,"PV":0,"generacja":21473,"zapotrzebowanie":18910,"czestotliwosc":50.015,"inne":0,"cieplne":17383}
-# }}
-
-# $ curl -s 'https://v1.api.raporty.pse.pl/api/pdgsz?$filter=business_date%20eq%20%272025-06-19%27' |jq .
-#
-# {
-#   "value": [
-#     {
-#       "udtczas": "2025-06-19 00:00:00",
-#       "zap_kse": 0,
-#       "znacznik": 1, # 0: zalecane uzytkowanie, 1: normalne uzytkowanie, 2: zalecane oszczedzanie, 3: wymagane ograniczenie
-#       "business_date": "2025-06-19",
-#       "source_datetime": "2025-06-19 17:22"
-#     },
-#     [...]
-#   ]
-# }
-#
-
 import logging
 from datetime import datetime
+import dateutil.tz
 from homeassistant.components.sensor import SensorEntity, SensorDeviceClass, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfPower, PERCENTAGE
@@ -63,7 +35,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
 
     entities = [ KompasEnergetycznyPowerSensor(api_data, **cfg) for cfg in sensors ]
     # generacja_share would always be 100% of generacja, so skip it
-    entities.extend([ KompasEnergetycznyPowerGenerationShareSensor(api_data, **cfg) for cfg in sensors if cfg["key"] not in ["generacja", "zapotrzebowanie"]])
+    entities.extend([KompasEnergetycznyPowerGenerationShareSensor(api_data, **cfg) for cfg in sensors if cfg["key"] not in ["generacja", "zapotrzebowanie"]])
     entities.append(KompasEnergetycznyPowerConsumptionShareSensor(api_data, "generacja", "Consumption"))
     entities.append(KompasEnergetycznyRenewableShareSensor(api_data))
     entities.append(KompasEnergetycznyPowerImportSensor(api_data))
@@ -195,14 +167,16 @@ class KompasEnergetycznyStatusSensor(KompasEnergetycznyBaseSensor):
         self._attr_state_class = None
 
     def get_znacznik(self):
-        """ Return raw value of `znacznik` property"""
+        """ Return raw value of `usage_fcst` (former `znacznik` in API v1) property"""
         pdgsz = self.api_data.coordinator_pdgsz.data.get("value", [])
-        now_hour = dt_util.now().hour
-        _LOGGER.debug("now_hour: %s", now_hour)
-        _LOGGER.debug("pdgsz: %s", pdgsz)
+        now = dt_util.now().replace(minute=0, second=0, microsecond=0)
+        _LOGGER.debug("now: %s", now)
+        #_LOGGER.debug("pdgsz: %s", pdgsz)
         for item in pdgsz:
-            if datetime.fromisoformat(item.get("udtczas")).hour == now_hour:
-                return item.get("znacznik")
+            if datetime.fromisoformat(item.get("dtime")).astimezone(dateutil.tz.tzlocal()) == now:
+                _LOGGER.debug("found item: %s", item)
+                return item.get("usage_fcst")
+        _LOGGER.error("Usage forcecast status not found for %s in %s", now, pdgsz)
         return None
 
     @property

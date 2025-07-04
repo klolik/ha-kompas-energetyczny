@@ -9,7 +9,7 @@ HOME_URL = "https://www.energetycznykompas.pl/"
 PRECISION = 2
 
 API_URL_PRZESYLY = "https://kompasen-dcgbapbjg3fkb5gp.a01.azurefd.net/datafile/przesyly.json"
-API_URL_SZCZYT = 'https://v1.api.raporty.pse.pl/api/pdgsz?$filter=business_date%20eq%20%27{}%27'
+API_URL_RAPORTY_V2 = 'https://v2.api.raporty.pse.pl/api/pdgsz?%24filter=dtime%20gt%20%27{}%27%20and%20is_active%20eq%20true'
 
 STATUS_MAP = {
     0: "Zalecane uzytkowanie",
