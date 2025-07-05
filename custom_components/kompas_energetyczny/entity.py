@@ -63,9 +63,12 @@ class KompasEnergetycznyDataUpdateCoordinator(DataUpdateCoordinator):
             response.raise_for_status()
             self.data = response.json()
             _LOGGER.debug("received %s", response.text)
-            with data["data"]["podsumowanie"] as podsumowanie:
-                if "odnawialne" not in podsumowanie:
-                    podsumowanie["odnawialne"] = podsumowanie["generacja"] - podsumowanie["cieplne"]
+
+            # `renewable` instead of `odnawialne` to maintain the same unique_id
+            podsumowanie = self.data["data"]["podsumowanie"]
+            if "renewable" not in podsumowanie:
+                podsumowanie["renewable"] = podsumowanie["generacja"] - podsumowanie["cieplne"]
+
             return self.data
         except requests.exceptions.RequestException as ex:
             raise UpdateFailed(f"Error communicating with API: {ex}") from ex

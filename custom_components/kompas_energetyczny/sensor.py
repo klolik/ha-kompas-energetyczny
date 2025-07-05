@@ -31,7 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
         {"key": "generacja", "name": "Production"},
         {"key": "zapotrzebowanie", "name": "Consumption"},
         {"key": "cieplne", "name": "Fossil"},
-        {"key": "odnawialne", "name": "Renewable"},
+        {"key": "renewable", "name": "Renewable"},
     ]
 
     entities = [ KompasEnergetycznyPowerSensor(api_data, **cfg) for cfg in sensors ]
