@@ -31,13 +31,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
         {"key": "generacja", "name": "Production"},
         {"key": "zapotrzebowanie", "name": "Consumption"},
         {"key": "cieplne", "name": "Fossil"},
+        {"key": "renewable", "name": "Renewable"},
     ]
 
     entities = [ KompasEnergetycznyPowerSensor(api_data, **cfg) for cfg in sensors ]
     # generacja_share would always be 100% of generacja, so skip it
     entities.extend([KompasEnergetycznyPowerGenerationShareSensor(api_data, **cfg) for cfg in sensors if cfg["key"] not in ["generacja", "zapotrzebowanie"]])
     entities.append(KompasEnergetycznyPowerConsumptionShareSensor(api_data, "generacja", "Consumption"))
-    entities.append(KompasEnergetycznyRenewableShareSensor(api_data))
     entities.append(KompasEnergetycznyPowerImportSensor(api_data))
 
     entities.append(KompasEnergetycznyStatusSensor(api_data))
@@ -137,25 +137,6 @@ class KompasEnergetycznyPowerConsumptionShareSensor(KompasEnergetycznyBaseSensor
         if value is not None and zapotrzebowanie is not None:
             return value / zapotrzebowanie * 100
         return None
-
-
-class KompasEnergetycznyRenewableShareSensor(KompasEnergetycznyBaseSensor):
-    """Renewable Power Share Sensor"""
-    def __init__(self, api_data: KompasEnergetycznyApiData) -> None:
-        super().__init__(api_data, None, "renewable_share", "Renewable Share")
-        self._attr_native_unit_of_measurement = PERCENTAGE
-        self._attr_state_class = SensorStateClass.MEASUREMENT
-        self._attr_suggested_display_precision = 1
-
-    @property
-    def native_value(self):
-        podsumowanie = self.api_data.coordinator.data.get("data", {}).get("podsumowanie", {})
-        generacja = podsumowanie.get("generacja")
-        cieplne = podsumowanie.get("cieplne")
-        if generacja is not None and cieplne is not None:
-            return (generacja - cieplne) / generacja * 100
-        return None
-
 
 
 class KompasEnergetycznyStatusSensor(KompasEnergetycznyBaseSensor):

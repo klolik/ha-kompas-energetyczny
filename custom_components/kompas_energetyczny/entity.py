@@ -16,17 +16,30 @@ _LOGGER = logging.getLogger(__name__)
 
 
 # $ curl https://kompasen-dcgbapbjg3fkb5gp.a01.azurefd.net/datafile/przesyly.json
-# {"status":"0","timestamp":1741901100661,"data":{
-#   "przesyly":[
+# {
+#   "status":"0",
+#   "timestamp":1741901100661,
+#   "data":{
+#     "przesyly":[
 #       {"wartosc":559,"rownolegly":false,"wartosc_plan":562,"id":"SE"},
 #       {"wartosc":-1415,"rownolegly":true,"wartosc_plan":-2405,"id":"DE"},
 #       {"wartosc":-1142,"rownolegly":true,"wartosc_plan":-452,"id":"CZ"},
 #       {"wartosc":-489,"rownolegly":true,"wartosc_plan":-130,"id":"SK"},
 #       {"wartosc":39,"rownolegly":false,"wartosc_plan":0,"id":"UA"},
 #       {"wartosc":-123,"rownolegly":false,"wartosc_plan":-39,"id":"LT"}
-#   ],
-#   "podsumowanie":{"wodne":145,"wiatrowe":3945,"PV":0,"generacja":21473,"zapotrzebowanie":18910,"czestotliwosc":50.015,"inne":0,"cieplne":17383}
-# }}
+#     ],
+#     "podsumowanie":{
+#       "wodne":145,
+#       "wiatrowe":3945,
+#       "PV":0,
+#       "generacja":21473,
+#       "zapotrzebowanie":18910,
+#       "czestotliwosc":50.015,
+#       "inne":0,
+#       "cieplne":17383
+#     }
+#   }
+# }
 
 class KompasEnergetycznyDataUpdateCoordinator(DataUpdateCoordinator):
     """Power data polling coordinator"""
@@ -50,6 +63,12 @@ class KompasEnergetycznyDataUpdateCoordinator(DataUpdateCoordinator):
             response.raise_for_status()
             self.data = response.json()
             _LOGGER.debug("received %s", response.text)
+
+            # `renewable` instead of `odnawialne` to maintain the same unique_id
+            podsumowanie = self.data["data"]["podsumowanie"]
+            if "renewable" not in podsumowanie:
+                podsumowanie["renewable"] = podsumowanie["generacja"] - podsumowanie["cieplne"]
+
             return self.data
         except requests.exceptions.RequestException as ex:
             raise UpdateFailed(f"Error communicating with API: {ex}") from ex
