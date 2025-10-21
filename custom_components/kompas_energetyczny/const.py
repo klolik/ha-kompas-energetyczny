@@ -17,3 +17,10 @@ STATUS_MAP = {
     2: "Zalecane oszczedzanie",
     3: "Wymagane ograniczenie",
 }
+
+STATUS_MAP_SHORT = {
+    0: "ZU",
+    1: "NU",
+    2: "ZO",
+    3: "WO",
+}

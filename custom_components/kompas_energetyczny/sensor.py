@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN, DEFAULT_NAME, STATUS_MAP
+from .const import DOMAIN, DEFAULT_NAME, STATUS_MAP, STATUS_MAP_SHORT
 from .entity import KompasEnergetycznyApiData
 
 
@@ -178,4 +178,8 @@ class KompasEnergetycznyStatusSensor(KompasEnergetycznyBaseSensor):
     @property
     def extra_state_attributes(self):
         znacznik = self.get_znacznik()
-        return {**self.api_data.coordinator.get_data_pdgsz(), "znacznik": znacznik}
+        return {
+            **self.api_data.coordinator.get_data_pdgsz(),
+            "znacznik": znacznik,
+            "short": STATUS_MAP_SHORT.get(znacznik, None),
+        }
