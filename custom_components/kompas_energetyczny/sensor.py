@@ -105,6 +105,13 @@ class KompasEnergetycznyPowerImportSensor(KompasEnergetycznyBaseSensor):
             return zapotrzebowanie - generacja
         return None
 
+    @property
+    def extra_state_attributes(self):
+        podsumowanie = self.get_data_podsumowanie()
+        generacja = podsumowanie.get("generacja")
+        zapotrzebowanie = podsumowanie.get("zapotrzebowanie")
+        return {"direction": "import" if zapotrzebowanie > generacja else "export"}
+
 
 class KompasEnergetycznyPowerGenerationShareSensor(KompasEnergetycznyBaseSensor):
     """Power Generation Share Sensor"""
