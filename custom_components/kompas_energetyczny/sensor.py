@@ -39,6 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     entities.extend([KompasEnergetycznyPowerGenerationShareSensor(api_data, **cfg) for cfg in sensors if cfg["key"] not in ["generacja", "zapotrzebowanie"]])
     entities.append(KompasEnergetycznyPowerConsumptionShareSensor(api_data, "generacja", "Consumption"))
     entities.append(KompasEnergetycznyPowerImportSensor(api_data))
+    entities.append(KompasEnergetycznyPowerImportShareSensor(api_data))
 
     entities.append(KompasEnergetycznyStatusSensor(api_data))
 
@@ -104,6 +105,38 @@ class KompasEnergetycznyPowerImportSensor(KompasEnergetycznyBaseSensor):
         if generacja is not None and zapotrzebowanie is not None:
             return zapotrzebowanie - generacja
         return None
+
+    @property
+    def extra_state_attributes(self):
+        podsumowanie = self.get_data_podsumowanie()
+        generacja = podsumowanie.get("generacja")
+        zapotrzebowanie = podsumowanie.get("zapotrzebowanie")
+        return {"direction": "import" if zapotrzebowanie > generacja else "export"}
+
+
+class KompasEnergetycznyPowerImportShareSensor(KompasEnergetycznyBaseSensor):
+    """Power Import Share Sensor"""
+    def __init__(self, api_data: KompasEnergetycznyApiData) -> None:
+        super().__init__(api_data, None, "import_share", "Import Share")
+        self._attr_native_unit_of_measurement = PERCENTAGE
+        self._attr_state_class = SensorStateClass.MEASUREMENT
+        self._attr_suggested_display_precision = 1
+
+    @property
+    def native_value(self):
+        podsumowanie = self.get_data_podsumowanie()
+        generacja = podsumowanie.get("generacja")
+        zapotrzebowanie = podsumowanie.get("zapotrzebowanie")
+
+        if generacja is None or zapotrzebowanie is None: # ???
+            return None
+        if generacja == zapotrzebowanie:
+            return 0
+        if zapotrzebowanie > generacja: # import as a % of demand
+            return 100 * (zapotrzebowanie - generacja) / zapotrzebowanie
+        if zapotrzebowanie < generacja: # export as a % of supply
+            return 100 * (generacja - zaporzebowanie) / generacja
+        return None # Should never happen
 
     @property
     def extra_state_attributes(self):
