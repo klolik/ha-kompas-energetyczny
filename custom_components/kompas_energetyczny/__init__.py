@@ -8,7 +8,7 @@ from homeassistant.const import Platform
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 
 from .const import DOMAIN, MANUFACTURER, DEFAULT_NAME, HOME_URL, PRECISION, STATUS_MAP
-from .entity import KompasEnergetycznyDataUpdateCoordinator, KompasEnergetycznyPdgszDataUpdateCoordinator, KompasEnergetycznyApiData
+from .entity import KompasEnergetycznyDataUpdateCoordinator, KompasEnergetycznyApiData
 
 
 PLATFORMS = [Platform.SENSOR]
@@ -32,11 +32,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     _LOGGER.debug("awaiting coordinator first refresh %s", entry)
     await coordinator.async_config_entry_first_refresh()
 
-    _LOGGER.debug("setting up pdgsz coordinator for %s", entry)
-    coordinator_pdgsz = KompasEnergetycznyPdgszDataUpdateCoordinator(hass, entry)
-    _LOGGER.debug("awaiting pdgsz coordinator first refresh %s", entry)
-    await coordinator_pdgsz.async_config_entry_first_refresh()
-
     device = DeviceInfo(
         entry_type=DeviceEntryType.SERVICE,
         identifiers={(DOMAIN, DOMAIN)},
@@ -45,7 +40,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         configuration_url=HOME_URL,
     )
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = KompasEnergetycznyApiData(device, coordinator, coordinator_pdgsz)
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = KompasEnergetycznyApiData(device, coordinator)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True

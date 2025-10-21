@@ -69,6 +69,9 @@ class KompasEnergetycznyBaseSensor(SensorEntity):
     def available(self) -> bool:
         return self.api_data.coordinator.last_update_success
 
+    def get_data_podsumowanie(self):
+        return self.api_data.coordinator.get_data_przesyly().get("data", {}).get("podsumowanie", {})
+
 
 class KompasEnergetycznyPowerSensor(KompasEnergetycznyBaseSensor):
     """Generic Power Sensor"""
@@ -80,7 +83,7 @@ class KompasEnergetycznyPowerSensor(KompasEnergetycznyBaseSensor):
 
     @property
     def native_value(self):
-        podsumowanie = self.api_data.coordinator.data.get("data", {}).get("podsumowanie", {})
+        podsumowanie = self.get_data_podsumowanie()
         # we shall return None if missing, so just pass through None as well
         return podsumowanie.get(self._podsumowanie_key)
 
@@ -95,7 +98,7 @@ class KompasEnergetycznyPowerImportSensor(KompasEnergetycznyBaseSensor):
 
     @property
     def native_value(self):
-        podsumowanie = self.api_data.coordinator.data.get("data", {}).get("podsumowanie", {})
+        podsumowanie = self.get_data_podsumowanie()
         generacja = podsumowanie.get("generacja")
         zapotrzebowanie = podsumowanie.get("zapotrzebowanie")
         if generacja is not None and zapotrzebowanie is not None:
@@ -113,7 +116,7 @@ class KompasEnergetycznyPowerGenerationShareSensor(KompasEnergetycznyBaseSensor)
 
     @property
     def native_value(self):
-        podsumowanie = self.api_data.coordinator.data.get("data", {}).get("podsumowanie", {})
+        podsumowanie = self.get_data_podsumowanie()
         value = podsumowanie.get(self._podsumowanie_key)
         generacja = podsumowanie.get("generacja")
         if value is not None and generacja is not None:
@@ -131,7 +134,7 @@ class KompasEnergetycznyPowerConsumptionShareSensor(KompasEnergetycznyBaseSensor
 
     @property
     def native_value(self):
-        podsumowanie = self.api_data.coordinator.data.get("data", {}).get("podsumowanie", {})
+        podsumowanie = self.get_data_podsumowanie()
         value = podsumowanie.get(self._podsumowanie_key)
         zapotrzebowanie = podsumowanie.get("zapotrzebowanie")
         if value is not None and zapotrzebowanie is not None:
@@ -149,7 +152,7 @@ class KompasEnergetycznyStatusSensor(KompasEnergetycznyBaseSensor):
 
     def get_znacznik(self):
         """ Return raw value of `usage_fcst` (former `znacznik` in API v1) property"""
-        pdgsz = self.api_data.coordinator_pdgsz.data.get("value", [])
+        pdgsz = self.api_data.coordinator.get_data_pdgsz().get("value", [])
         now = dt_util.now().replace(minute=0, second=0, microsecond=0)
         _LOGGER.debug("now: %s", now)
         #_LOGGER.debug("pdgsz: %s", pdgsz)
@@ -168,4 +171,4 @@ class KompasEnergetycznyStatusSensor(KompasEnergetycznyBaseSensor):
     @property
     def extra_state_attributes(self):
         znacznik = self.get_znacznik()
-        return {**self.api_data.coordinator_pdgsz.data, "znacznik": znacznik}
+        return {**self.api_data.coordinator.get_data_pdgsz(), "znacznik": znacznik}

@@ -10,7 +10,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from homeassistant.util import dt as dt_util
 import requests
 
-from .const import API_URL_RAPORTY_V2
+from .const import API_URL_PRZESYLY, API_URL_RAPORTY_V2
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,40 +40,7 @@ _LOGGER = logging.getLogger(__name__)
 #     }
 #   }
 # }
-
-class KompasEnergetycznyDataUpdateCoordinator(DataUpdateCoordinator):
-    """Power data polling coordinator"""
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
-        _LOGGER.debug("initializing coordinator: %s", entry)
-        super().__init__(
-            hass,
-            _LOGGER,
-            config_entry=entry,
-            name=entry.title,
-            update_interval=timedelta(seconds=300)
-        )
-        self.url = entry.data.get("url")
-        _LOGGER.debug("url: %s", self.url)
-        self.data = None
-
-    async def _async_update_data(self):
-        try:
-            _LOGGER.debug("calling %s", self.url)
-            response = await self.hass.async_add_executor_job(requests.get, self.url)
-            response.raise_for_status()
-            self.data = response.json()
-            _LOGGER.debug("received %s", response.text)
-
-            # `renewable` instead of `odnawialne` to maintain the same unique_id
-            podsumowanie = self.data["data"]["podsumowanie"]
-            if "renewable" not in podsumowanie:
-                podsumowanie["renewable"] = podsumowanie["generacja"] - podsumowanie["cieplne"]
-
-            return self.data
-        except requests.exceptions.RequestException as ex:
-            raise UpdateFailed(f"Error communicating with API: {ex}") from ex
-
-
+#
 # $ curl -s 'https://v1.api.raporty.pse.pl/api/pdgsz?$filter=business_date%20eq%20%272025-06-19%27' |jq .
 # {
 #   "value": [
@@ -107,10 +74,11 @@ class KompasEnergetycznyDataUpdateCoordinator(DataUpdateCoordinator):
 #   ]
 # }
 
-class KompasEnergetycznyPdgszDataUpdateCoordinator(DataUpdateCoordinator):
-    """Peak Hours data polling coordinator"""
+class KompasEnergetycznyDataUpdateCoordinator(DataUpdateCoordinator):
+    """Power data polling coordinator"""
+
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
-        _LOGGER.debug("initializing pdgsz coordinator: %s", entry)
+        _LOGGER.debug("initializing coordinator: %s", entry)
         super().__init__(
             hass,
             _LOGGER,
@@ -118,25 +86,53 @@ class KompasEnergetycznyPdgszDataUpdateCoordinator(DataUpdateCoordinator):
             name=entry.title,
             update_interval=timedelta(seconds=300)
         )
-        self.data = None
+        self.url = entry.data.get("url")
+        _LOGGER.debug("url: %s", self.url)
+        self.data = {}
 
     async def _async_update_data(self):
+        # Two separate coordinators don't work for some reason - second one seems not to be refreshed.
+        # pdgsz is a 24 hour forecast, but it often does change over the course of a day.
+        try:
+            url = API_URL_PRZESYLY
+            _LOGGER.debug("calling %s", self.url)
+            response = await self.hass.async_add_executor_job(requests.get, self.url)
+            response.raise_for_status()
+            data = response.json()
+            _LOGGER.debug("received %s", response.text)
+
+            # `renewable` instead of `odnawialne` to maintain the same unique_id
+            podsumowanie = data["data"]["podsumowanie"]
+            if "renewable" not in podsumowanie:
+                podsumowanie["renewable"] = podsumowanie["generacja"] - podsumowanie["cieplne"]
+
+            self.data["przesyly"] = data
+        except requests.exceptions.RequestException as ex:
+            raise UpdateFailed(f"Error communicating with API: {ex}") from ex
+
         try:
             today = dt_util.now() #TODO# ensure its Poland time zone aware
             url = API_URL_RAPORTY_V2.format(today.strftime("%Y-%m-%d"))
             _LOGGER.debug("calling pdgsz %s", url)
             response = await self.hass.async_add_executor_job(requests.get, url)
             response.raise_for_status()
-            self.data = response.json()
+            data = response.json()
             _LOGGER.debug("received pdgsz %s", response.text)
-            return self.data
+            self.data["pdgsz"] = data
         except requests.exceptions.RequestException as ex:
             raise UpdateFailed(f"Error communicating with pdgsz API: {ex}") from ex
 
+        return self.data
+
+
+    def get_data_przesyly(self):
+        return self.data["przesyly"]
+
+    def get_data_pdgsz(self):
+        return self.data["pdgsz"]
 
 @dataclass
 class KompasEnergetycznyApiData:
     """hass.data DOMAIN entry data"""
     device: DeviceInfo
     coordinator: KompasEnergetycznyDataUpdateCoordinator
-    coordinator_pdgsz: KompasEnergetycznyPdgszDataUpdateCoordinator
