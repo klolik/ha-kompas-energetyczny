@@ -71,6 +71,7 @@ class KompasEnergetycznyBaseSensor(SensorEntity):
         return self.api_data.coordinator.last_update_success
 
     def get_data_podsumowanie(self):
+        """ Helper to get data from coordinator """
         return self.api_data.coordinator.get_data_przesyly().get("data", {}).get("podsumowanie", {})
 
 

@@ -126,9 +126,11 @@ class KompasEnergetycznyDataUpdateCoordinator(DataUpdateCoordinator):
 
 
     def get_data_przesyly(self):
+        """ Public interface to get data """
         return self.data["przesyly"]
 
     def get_data_pdgsz(self):
+        """ Public interface to get data """
         return self.data["pdgsz"]
 
 @dataclass
