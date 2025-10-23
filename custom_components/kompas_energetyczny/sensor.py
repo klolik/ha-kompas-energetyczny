@@ -71,6 +71,7 @@ class KompasEnergetycznyBaseSensor(SensorEntity):
         return self.api_data.coordinator.last_update_success
 
     def get_data_podsumowanie(self):
+        """ Helper to get data from coordinator """
         return self.api_data.coordinator.get_data_przesyly().get("data", {}).get("podsumowanie", {})
 
 
@@ -135,7 +136,7 @@ class KompasEnergetycznyPowerImportShareSensor(KompasEnergetycznyBaseSensor):
         if zapotrzebowanie > generacja: # import as a % of demand
             return 100 * (zapotrzebowanie - generacja) / zapotrzebowanie
         if zapotrzebowanie < generacja: # export as a % of supply
-            return 100 * (generacja - zaporzebowanie) / generacja
+            return 100 * (generacja - zapotrzebowanie) / generacja
         return None # Should never happen
 
     @property
