@@ -5,7 +5,7 @@
     "dependencies": [],
     "codeowners": ["@klolik"],
     "requirements": [],
-    "version": "0.4.2",
+    "version": "0.4.3",
     "iot_class": "cloud_polling",
     "integration_type": "service",
     "config_flow": true,

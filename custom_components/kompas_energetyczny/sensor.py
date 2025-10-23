@@ -93,7 +93,7 @@ class KompasEnergetycznyPowerSensor(KompasEnergetycznyBaseSensor):
 class KompasEnergetycznyPowerImportSensor(KompasEnergetycznyBaseSensor):
     """Power Import Sensor"""
     def __init__(self, api_data: KompasEnergetycznyApiData) -> None:
-        super().__init__(api_data, None, "power_import", "Power Import")
+        super().__init__(api_data, None, "import_power", "Import Power")
         self._attr_device_class = SensorDeviceClass.POWER
         self._attr_native_unit_of_measurement = UnitOfPower.MEGA_WATT
         self._attr_state_class = SensorStateClass.MEASUREMENT
