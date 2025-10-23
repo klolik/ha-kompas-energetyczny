@@ -136,7 +136,7 @@ class KompasEnergetycznyPowerImportShareSensor(KompasEnergetycznyBaseSensor):
         if zapotrzebowanie > generacja: # import as a % of demand
             return 100 * (zapotrzebowanie - generacja) / zapotrzebowanie
         if zapotrzebowanie < generacja: # export as a % of supply
-            return 100 * (generacja - zapotrzebowanie) / generacja
+            return 100 * (zapotrzebowanie - generacja) / generacja # negative
         return None # Should never happen
 
     @property
