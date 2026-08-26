@@ -6,7 +6,7 @@ from datetime import datetime
 import dateutil.tz
 from homeassistant.components.sensor import SensorEntity, SensorDeviceClass, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import UnitOfPower, PERCENTAGE
+from homeassistant.const import UnitOfPower, PERCENTAGE, MATCH_ALL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
@@ -187,6 +187,11 @@ class KompasEnergetycznyPowerConsumptionShareSensor(KompasEnergetycznyBaseSensor
 
 class KompasEnergetycznyStatusSensor(KompasEnergetycznyBaseSensor):
     """Energy Use Recommendation Sensor"""
+
+    # https://developers.home-assistant.io/docs/core/entity#excluding-state-attributes-from-recorder-history
+    # https://developers.home-assistant.io/blog/2023/09/20/excluding-state-attributes-from-recording/
+    _unrecorded_attributes: frozenset({MATCH_ALL})
+
     def __init__(self, api_data: KompasEnergetycznyApiData) -> None:
         super().__init__(api_data, None, "status", "Status")
         self._attr_device_class = SensorDeviceClass.ENUM
