@@ -79,6 +79,9 @@ class KompasEnergetycznyBaseSensor(SensorEntity):
 
 class KompasEnergetycznyPowerSensor(KompasEnergetycznyBaseSensor):
     """Generic Power Sensor"""
+
+    _attr_entity_registry_enabled_default = False
+
     def __init__(self, api_data: KompasEnergetycznyApiData, key: str, name: str) -> None:
         super().__init__(api_data, key, key, f"{name} Power")
         self._attr_device_class = SensorDeviceClass.POWER
@@ -94,6 +97,9 @@ class KompasEnergetycznyPowerSensor(KompasEnergetycznyBaseSensor):
 
 class KompasEnergetycznyPowerImportSensor(KompasEnergetycznyBaseSensor):
     """Power Import Sensor"""
+
+    _attr_entity_registry_enabled_default = False
+
     def __init__(self, api_data: KompasEnergetycznyApiData) -> None:
         super().__init__(api_data, None, "import_power", "Import Power")
         self._attr_device_class = SensorDeviceClass.POWER
@@ -119,6 +125,9 @@ class KompasEnergetycznyPowerImportSensor(KompasEnergetycznyBaseSensor):
 
 class KompasEnergetycznyPowerImportShareSensor(KompasEnergetycznyBaseSensor):
     """Power Import Share Sensor"""
+
+    _attr_entity_registry_enabled_default = False
+
     def __init__(self, api_data: KompasEnergetycznyApiData) -> None:
         super().__init__(api_data, None, "import_share", "Import Share")
         self._attr_native_unit_of_measurement = PERCENTAGE
@@ -151,6 +160,9 @@ class KompasEnergetycznyPowerImportShareSensor(KompasEnergetycznyBaseSensor):
 
 class KompasEnergetycznyPowerGenerationShareSensor(KompasEnergetycznyBaseSensor):
     """Power Generation Share Sensor"""
+
+    _attr_entity_registry_enabled_default = False
+
     def __init__(self, api_data: KompasEnergetycznyApiData, key: str, name: str) -> None:
         super().__init__(api_data, key, f"{key}_share", f"{name} Share")
         self._attr_native_unit_of_measurement = PERCENTAGE
@@ -169,6 +181,9 @@ class KompasEnergetycznyPowerGenerationShareSensor(KompasEnergetycznyBaseSensor)
 
 class KompasEnergetycznyPowerConsumptionShareSensor(KompasEnergetycznyBaseSensor):
     """Power Consumption Share Sensor"""
+
+    _attr_entity_registry_enabled_default = False
+
     def __init__(self, api_data: KompasEnergetycznyApiData, key: str, name: str) -> None:
         super().__init__(api_data, key, f"{key}_coverage", f"{name} Coverage")
         self._attr_native_unit_of_measurement = PERCENTAGE
