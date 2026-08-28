@@ -3,10 +3,10 @@
     "sensor": {
       "znacznik": {
         "state": {
-          "zalecane_uzytkowanie": "Zalecane uzytkowanie",
-          "normalne_uzytkowanie": "Normalne uzytkowanie",
-          "zalecane_oszczedzanie": "Zalecane oszczedzanie",
-          "wymagane_ograniczenie": "Wymagane ograniczenie"
+          "zalecane_uzytkowanie": "Use recommended",
+          "normalne_uzytkowanie": "Normal use",
+          "zalecane_oszczedzanie": "Saving recommented",
+          "wymagane_ograniczenie": "Restriction required"
         }
       }
     }
