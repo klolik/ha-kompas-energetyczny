@@ -1,0 +1,15 @@
+{
+  "entity": {
+    "sensor": {
+      "znacznik": {
+        "default": "mdi:help-box",
+        "state": {
+          "zalecane_uzytkowanie": "mdi:lightning-bolt",
+          "normalne_uzytkowanie": "mdi:lightning-bolt-outline",
+          "zalecane_oszczedzanie": "mdi:flash-alert-outline",
+          "wymagane_ograniczenie": "mdi:flash-off"
+        }
+      }
+    }
+  }
+}

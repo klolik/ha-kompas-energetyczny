@@ -25,15 +25,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     _LOGGER.debug("setting up sensors")
     #TODO# config flow to disable certain sensors
     sensors = [
-        {"key": "wodne", "name": "Hydro"},
-        {"key": "wiatrowe", "name": "Wind"},
-        {"key": "PV", "name": "Solar"},
-        {"key": "generacja", "name": "Production"},
-        {"key": "zapotrzebowanie", "name": "Consumption"},
-        {"key": "cieplne", "name": "Fossil"},
-        {"key": "renewable", "name": "Renewable"},
-        {"key": "morskiewiatrowe", "name": "Wind Offshore"},
-        {"key": "ladowewiatrowe", "name": "Wind Onshore"},
+        {"key": "wodne", "name": "Hydro", "icon": "mdi:hydro-power"},
+        {"key": "wiatrowe", "name": "Wind", "icon": "mdi:wind-power"},
+        {"key": "PV", "name": "Solar", "icon": "mdi:solar-power"},
+        {"key": "generacja", "name": "Production", "icon": "mdi:transmission-tower"},
+        {"key": "zapotrzebowanie", "name": "Consumption", "icon": "mdi:transmission-tower"},
+        {"key": "cieplne", "name": "Fossil", "icon": "mdi:barrel"},
+        {"key": "renewable", "name": "Renewable", "icon": "mdi:leaf"},
+        {"key": "morskiewiatrowe", "name": "Wind Offshore", "icon": "mdi:wind-power"},
+        {"key": "ladowewiatrowe", "name": "Wind Onshore", "icon": "mdi:wind-power"},
     ]
 
     entities = [ KompasEnergetycznyPowerSensor(api_data, **cfg) for cfg in sensors ]
@@ -48,11 +48,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     async_add_entities(entities)
     return True
 
-
 class KompasEnergetycznyBaseSensor(SensorEntity):
     """Base class with common attributes"""
 
-    def __init__(self, api_data: KompasEnergetycznyApiData, src: str, sid: str, name: str) -> None:
+    def __init__(self, api_data: KompasEnergetycznyApiData, src: str, sid: str, name: str, icon: str = None) -> None:
         """Initialize sensor with src: json data key, sid: entity id, name: display name"""
         super().__init__()
         _LOGGER.debug("setting up %s", sid)
@@ -63,6 +62,8 @@ class KompasEnergetycznyBaseSensor(SensorEntity):
         self._attr_state_class = SensorStateClass.MEASUREMENT
         self._attr_device_info = self.api_data.device
         self._attr_suggested_display_precision = 0
+        if icon:
+            self._attr_icon = icon
 
     async def async_added_to_hass(self) -> None:
         self.async_on_remove(
@@ -83,8 +84,8 @@ class KompasEnergetycznyPowerSensor(KompasEnergetycznyBaseSensor):
 
     _attr_entity_registry_enabled_default = False
 
-    def __init__(self, api_data: KompasEnergetycznyApiData, key: str, name: str) -> None:
-        super().__init__(api_data, key, key, f"{name} Power")
+    def __init__(self, api_data: KompasEnergetycznyApiData, key: str, name: str, icon: str) -> None:
+        super().__init__(api_data, key, key, f"{name} Power", icon)
         self._attr_device_class = SensorDeviceClass.POWER
         self._attr_native_unit_of_measurement = UnitOfPower.MEGA_WATT
         self._attr_state_class = SensorStateClass.MEASUREMENT
@@ -123,6 +124,13 @@ class KompasEnergetycznyPowerImportSensor(KompasEnergetycznyBaseSensor):
         zapotrzebowanie = podsumowanie.get("zapotrzebowanie")
         return {"direction": "import" if zapotrzebowanie > generacja else "export"}
 
+    @property
+    def icon(self):
+        podsumowanie = self.get_data_podsumowanie()
+        generacja = podsumowanie.get("generacja")
+        zapotrzebowanie = podsumowanie.get("zapotrzebowanie")
+        return "mdi:transmission-tower-import" if zapotrzebowanie > generacja else "mdi:transmission-tower-export"
+
 
 class KompasEnergetycznyPowerImportShareSensor(KompasEnergetycznyBaseSensor):
     """Power Import Share Sensor"""
@@ -158,14 +166,21 @@ class KompasEnergetycznyPowerImportShareSensor(KompasEnergetycznyBaseSensor):
         zapotrzebowanie = podsumowanie.get("zapotrzebowanie")
         return {"direction": "import" if zapotrzebowanie > generacja else "export"}
 
+    @property
+    def icon(self):
+        podsumowanie = self.get_data_podsumowanie()
+        generacja = podsumowanie.get("generacja")
+        zapotrzebowanie = podsumowanie.get("zapotrzebowanie")
+        return "mdi:transmission-tower-import" if zapotrzebowanie > generacja else "mdi:transmission-tower-export"
+
 
 class KompasEnergetycznyPowerGenerationShareSensor(KompasEnergetycznyBaseSensor):
     """Power Generation Share Sensor"""
 
     _attr_entity_registry_enabled_default = False
 
-    def __init__(self, api_data: KompasEnergetycznyApiData, key: str, name: str) -> None:
-        super().__init__(api_data, key, f"{key}_share", f"{name} Share")
+    def __init__(self, api_data: KompasEnergetycznyApiData, key: str, name: str, icon: str) -> None:
+        super().__init__(api_data, key, f"{key}_share", f"{name} Share", icon)
         self._attr_native_unit_of_measurement = PERCENTAGE
         self._attr_state_class = SensorStateClass.MEASUREMENT
         self._attr_suggested_display_precision = 1
@@ -186,7 +201,7 @@ class KompasEnergetycznyPowerConsumptionShareSensor(KompasEnergetycznyBaseSensor
     _attr_entity_registry_enabled_default = False
 
     def __init__(self, api_data: KompasEnergetycznyApiData, key: str, name: str) -> None:
-        super().__init__(api_data, key, f"{key}_coverage", f"{name} Coverage")
+        super().__init__(api_data, key, f"{key}_coverage", f"{name} Coverage", "mdi:percent")
         self._attr_native_unit_of_measurement = PERCENTAGE
         self._attr_state_class = SensorStateClass.MEASUREMENT
         self._attr_suggested_display_precision = 1
@@ -204,6 +219,7 @@ class KompasEnergetycznyPowerConsumptionShareSensor(KompasEnergetycznyBaseSensor
 class KompasEnergetycznyStatusSensor(KompasEnergetycznyBaseSensor):
     """Energy Use Recommendation Sensor"""
 
+    _attr_translation_key = "znacznik"
     _unrecorded_attributes = frozenset({MATCH_ALL})
 
     def __init__(self, api_data: KompasEnergetycznyApiData) -> None:

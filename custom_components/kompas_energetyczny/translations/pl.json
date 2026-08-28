@@ -1,0 +1,14 @@
+{
+  "entity": {
+    "sensor": {
+      "znacznik": {
+        "state": {
+          "zalecane_uzytkowanie": "Zalecane uzytkowanie",
+          "normalne_uzytkowanie": "Normalne uzytkowanie",
+          "zalecane_oszczedzanie": "Zalecane oszczedzanie",
+          "wymagane_ograniczenie": "Wymagane ograniczenie"
+        }
+      }
+    }
+  }
+}
