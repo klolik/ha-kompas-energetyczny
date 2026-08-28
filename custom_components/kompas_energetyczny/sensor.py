@@ -203,9 +203,7 @@ class KompasEnergetycznyPowerConsumptionShareSensor(KompasEnergetycznyBaseSensor
 class KompasEnergetycznyStatusSensor(KompasEnergetycznyBaseSensor):
     """Energy Use Recommendation Sensor"""
 
-    # https://developers.home-assistant.io/docs/core/entity#excluding-state-attributes-from-recorder-history
-    # https://developers.home-assistant.io/blog/2023/09/20/excluding-state-attributes-from-recording/
-    _unrecorded_attributes: frozenset({MATCH_ALL})
+    _unrecorded_attributes = frozenset({MATCH_ALL})
 
     def __init__(self, api_data: KompasEnergetycznyApiData) -> None:
         super().__init__(api_data, None, "status", "Status")
@@ -235,7 +233,6 @@ class KompasEnergetycznyStatusSensor(KompasEnergetycznyBaseSensor):
     def extra_state_attributes(self):
         znacznik = self.get_znacznik()
         return {
-            **self.api_data.coordinator.get_data_pdgsz(),
             "znacznik": znacznik,
             "short": STATUS_MAP_SHORT.get(znacznik, None),
         }
