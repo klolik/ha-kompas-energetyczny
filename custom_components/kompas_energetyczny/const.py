@@ -8,7 +8,7 @@ HOME_URL = "https://www.energetycznykompas.pl/"
 # Value rounding precision, namely percentage
 PRECISION = 2
 
-API_URL_PRZESYLY = "https://kompasen-dcgbapbjg3fkb5gp.a01.azurefd.net/datafile/przesyly.json"
+API_URL_PRZESYLY = "https://files.energetycznykompas.pl/datafile/przesyly.json"
 API_URL_RAPORTY_V2 = 'https://api.raporty.pse.pl/api/pdgsz?$filter=dtime%20gt%20%27{}%27%20and%20is_active%20eq%20true'
 
 STATUS_MAP = {
