@@ -4,10 +4,10 @@
       "znacznik": {
         "default": "mdi:help-box",
         "state": {
-          "zalecane_uzytkowanie": "mdi:lightning-bolt",
-          "normalne_uzytkowanie": "mdi:lightning-bolt-outline",
-          "zalecane_oszczedzanie": "mdi:flash-alert-outline",
-          "wymagane_ograniczenie": "mdi:flash-off"
+          "recommended_use": "mdi:lightning-bolt",
+          "normal_use": "mdi:lightning-bolt-outline",
+          "recommended_saving": "mdi:flash-alert-outline",
+          "required_restriction": "mdi:flash-off"
         }
       }
     }

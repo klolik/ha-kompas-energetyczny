@@ -3,10 +3,20 @@
     "sensor": {
       "znacznik": {
         "state": {
-          "zalecane_uzytkowanie": "Use recommended",
-          "normalne_uzytkowanie": "Normal use",
-          "zalecane_oszczedzanie": "Saving recommented",
-          "wymagane_ograniczenie": "Restriction required"
+          "recommended_use": "Use recommended",
+          "normal_use": "Normal use",
+          "recommended_saving": "Saving recommented",
+          "required_restriction": "Restriction required"
+        },
+        "state_attributes": {
+          "short": {
+            "state": {
+              "ru": "RU",
+              "nu": "NU",
+              "rs": "RS",
+              "rr": "RR"
+            }
+          }
         }
       }
     }

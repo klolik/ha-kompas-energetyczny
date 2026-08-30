@@ -12,15 +12,15 @@ API_URL_PRZESYLY = "https://files.energetycznykompas.pl/datafile/przesyly.json"
 API_URL_RAPORTY_V2 = 'https://api.raporty.pse.pl/api/pdgsz?$filter=dtime%20gt%20%27{}%27%20and%20is_active%20eq%20true'
 
 STATUS_MAP = {
-    0: "zalecane_uzytkowanie",
-    1: "normalne_uzytkowanie",
-    2: "zalecane_oszczedzanie",
-    3: "wymagane_ograniczenie",
+    0: "recommended_use",      # Zalecane uzytkowanie
+    1: "normal_use",           # Normalne uzytkowanie
+    2: "recommended_saving",   # Zalecane oszczedzanie
+    3: "required_restriction", # Wymagane ograniczenie
 }
 
 STATUS_MAP_SHORT = {
-    0: "ZU",
-    1: "NU",
-    2: "ZO",
-    3: "WO",
+    0: "ru", # ZU
+    1: "nu", # NU
+    2: "rs", # ZO
+    3: "rr", # WO
 }
