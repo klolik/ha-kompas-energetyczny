@@ -6,7 +6,7 @@
           "recommended_use": "Zalecane uzytkowanie",
           "normal_use": "Normalne uzytkowanie",
           "recommended_saving": "Zalecane oszczedzanie",
-          "required_restriction": "Wymagane ograniczenie"
+          "required_reduction": "Wymagane ograniczenie"
         },
         "state_attributes": {
           "short": {

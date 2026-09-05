@@ -6,7 +6,7 @@
           "recommended_use": "Use recommended",
           "normal_use": "Normal use",
           "recommended_saving": "Saving recommented",
-          "required_restriction": "Restriction required"
+          "required_reduction": "Restriction required"
         },
         "state_attributes": {
           "short": {
