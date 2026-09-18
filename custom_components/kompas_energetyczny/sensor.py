@@ -40,6 +40,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     # generacja_share would always be 100% of generacja, so skip it
     entities.extend([KompasEnergetycznyPowerGenerationShareSensor(api_data, **cfg) for cfg in sensors if cfg["key"] not in ["generacja", "zapotrzebowanie"]])
     entities.append(KompasEnergetycznyPowerConsumptionShareSensor(api_data, "generacja", "Consumption"))
+    entities.append(KompasEnergetycznyPowerProductionShareSensor(api_data, "zapotrzebowanie", "Production"))
     entities.append(KompasEnergetycznyPowerImportSensor(api_data))
     entities.append(KompasEnergetycznyPowerImportShareSensor(api_data))
 
@@ -213,6 +214,27 @@ class KompasEnergetycznyPowerConsumptionShareSensor(KompasEnergetycznyBaseSensor
         zapotrzebowanie = podsumowanie.get("zapotrzebowanie")
         if value is not None and zapotrzebowanie is not None:
             return value / zapotrzebowanie * 100
+        return None
+
+
+class KompasEnergetycznyPowerProductionShareSensor(KompasEnergetycznyBaseSensor):
+    """Power Production Share Sensor"""
+
+    _attr_entity_registry_enabled_default = False
+
+    def __init__(self, api_data: KompasEnergetycznyApiData, key: str, name: str) -> None:
+        super().__init__(api_data, key, f"{key}_coverage", f"{name} Coverage", "mdi:percent")
+        self._attr_native_unit_of_measurement = PERCENTAGE
+        self._attr_state_class = SensorStateClass.MEASUREMENT
+        self._attr_suggested_display_precision = 1
+
+    @property
+    def native_value(self):
+        podsumowanie = self.get_data_podsumowanie()
+        value = podsumowanie.get(self._podsumowanie_key)
+        generacja = podsumowanie.get("generacja")
+        if value is not None and generacja is not None:
+            return value / generacja * 100
         return None
 
 
